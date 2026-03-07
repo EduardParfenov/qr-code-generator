@@ -127,7 +127,7 @@ qr-code-generator/
 
 Исходный код данной программы доступен в открытом репозитории на GitHub:
 
-** [https://github.com/yourusername/qr-code-generator](https://github.com/yourusername/qr-code-generator)**
+[qr-code-generator](https://github.com/EduardParfenov/qr-code-generator/tree/master)
 
 Вы можете клонировать репозиторий, следить за обновлениями, сообщать об ошибках или предлагать улучшения через Issues и Pull Requests.
 
