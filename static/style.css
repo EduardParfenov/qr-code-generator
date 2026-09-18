@@ -1,0 +1,310 @@
+/* Переменные для единообразной цветовой схемы и легкой модификации темы */
+:root {
+  --primary-color: #009639;    /* зеленый для основных действий */
+  --hover-color: #007e30;      /* Более темный зеленый для состояний наведения */
+  --text-color: #1d1d1f;       /* Черный для основного текста */
+  --secondary-text: #a3a3a5;   /* Светлый серый для вторичного текста */
+  --background: #fbfbfd;       /* Светлый цвет фона */
+  --card-background: #ffffff;  /* Белый цвет для фона визитки */
+}
+
+/* Сброс стилей браузера по умолчанию и улучшение отображения текста */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Основные стили текста с иерархией шрифтов */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  background-color: #fbfbfd;
+  color: #1d1d1f;
+  line-height: 1.47059;
+  min-height: 100vh;
+}
+
+/* Основной контейнер с адаптивной шириной */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 20px;
+}
+
+/* Оформление заголовка страницы */
+h1 {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+/* Двухколоночный макет для формы и предварительного просмотра */
+.content-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+
+  /* padding-bottom: 100px;  /*раскомментировать если нужен отступ внизу страницы*/
+}
+
+/* Левая сторона: оформление раздела формы */
+.form-section {
+  padding: 30px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Заголовок левой стороны */
+.fill-form {
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+/* Правая сторона: раздел предварительного просмотра */
+.preview-section {
+  position: sticky;
+  top: 40px;
+  padding: 30px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Интервал между группами полей формы */
+.form-group {
+  margin-bottom: 24px;
+}
+
+/* Стиль сообщения об ошибке */
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 15px;
+  border: 1px solid #ef9a9a;
+}
+
+/* Оформление этикетки формы */
+label {
+  display: block;
+  font-size: 17px;
+  font-weight: 400;
+  margin-bottom: 8px;
+  color: #009639;
+}
+
+::placeholder {
+    color: #999 !important;
+    opacity: 0.7 !important;
+}
+
+/* Оформление поля ввода с плавными переходами фокуса */
+input[type="text"],
+input[type="email"],
+input[type="tel"] {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 17px;
+  border: 1px solid #d2d2d7;
+  border-radius: 12px;
+  background-color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+/* Стиль ввода файла */
+.file-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 2px dashed #d2d2d7;
+  border-radius: 12px;
+  background-color: #f5f5f7;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.file-input:hover {
+  border-color: #009639;
+  background-color: #f0f0f2;
+}
+
+.help-text {
+  display: block;
+  margin-top: 8px;
+  font-size: 14px;
+  color:  #a3a3a5;
+}
+
+/* Состояние фокуса ввода с подсветкой */
+input:focus {
+  outline: none;
+  border-color: #009639;
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+}
+
+/* Основной стиль кнопки */
+button {
+  background-color: #009639;
+  color: white;
+  font-size: 17px;
+  font-weight: 400;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+/* Анимация при наведении на кнопку */
+button:hover {
+  background-color: #007e30;
+  transform: translateY(-1px);
+}
+
+.attention {
+  background-color: #fff8e1;
+  border-left: 4px solid #ffc107;
+  padding: 12px 16px;
+  margin: 15px 0;
+  border-radius: 4px;
+  font-size: 12px;
+  /* --text-color: red !important; меняем переменную цвета шрифта */
+  color: red !important;
+  line-height: 1.4;
+  align-items: center;
+}
+
+/* Контейнер результатов предварительного просмотра */
+.result {
+  margin: 25px 0px;
+  text-align: center;
+}
+
+/* Предварительный просмотр заголовка раздела */
+.result h2 {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+/* Предварительный просмотр */
+.result img {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 32px;
+  border-radius: 18px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Контейнер кнопок действий */
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* Общие стили кнопок Скачать и Печать */
+.download-btn,
+.print-btn {
+  flex: 1;
+  text-decoration: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 17px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+/* Стиль кнопки Скачать */
+.download-btn {
+  background-color: #009639;
+  color: white;
+}
+
+/* Стиль кнопки Печать */
+.print-btn {
+  background-color: #e8e8ed;
+  color:  #1d1d1f;
+}
+
+/* Стиль кнопки Шаблон визитки */
+.card-template-btn {
+  flex: 1;
+  background-color: #ffc107;
+  padding: 12px 24px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: black;
+  font-size: 17px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+/* Эффекты наведения на кнопку действия */
+.download-btn:hover {
+  opacity: 0.9;
+  background-color: #007e30;
+  transform: translateY(-1px);
+}
+
+.print-btn:hover {
+  opacity: 0.9;
+  background-color: #b9b9bb;
+  transform: translateY(-1px);
+}
+
+.card-template-btn:hover {
+  opacity: 0.9;
+  background-color: #e4ab00;
+  transform: translateY(-1px);
+}
+
+/* Отладка стилей флажка */
+input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Корректировки макета для печати */
+@media print {
+  .form-section,
+  .button-group {
+    display: none;
+  }
+
+  .preview-section {
+    width: 100%;
+    box-shadow: none;
+  }
+
+  .result img {
+    box-shadow: none;
+    margin: 0;
+  }
+}
+
+/* Адаптивные настройки для мобильных устройств */
+@media (max-width: 968px) {
+  .content-wrapper {
+    grid-template-columns: 1fr;  /* Стек столбцов на мобильном устройстве */
+  }
+
+  .preview-section {
+    position: static;  /* Удалить фиксированное позиционирование на мобильных устройствах */
+  }
+
+  h1 {
+    font-size: 36px;  /* Уменьшить заголовок на мобильном устройстве */
+  }
+
+  .button-group {
+    flex-direction: column;  /* Стек кнопок на мобильном телефоне */
+  }
+}

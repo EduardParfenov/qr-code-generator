@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR-код контакта</title>
+    <!-- Ссылка на CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Ссрылка на JS -->
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</head>
+<body>
+    <!-- <div style="display: none;">IIS_PROXY_TEST</div> -->
+
+    <div class="container">
+        <h1>Генератор QR-кода контакта</h1>
+        <!-- Обертка с двухколоночным макетом -->
+        <div class="content-wrapper">
+            <!-- Левая колонка: Форма ввода -->
+            <div class="form-section">
+                {% if error %}
+                <div class="error-message">
+                    {{ error }}
+                </div>
+                {% endif %}
+                <form id="businessCardForm" method="POST" action="{{ url_for('generate_card') }}" enctype="multipart/form-data">
+                    <p class="fill-form">Заполните форму</p>
+                    <!-- Поле ввода имени -->
+                    <div class="form-group">
+                        <label for="name">Ф.И.О.*</label>
+                        <input type="text" placeholder="Фамилия Имя Отчество" id="name" name="name" required>
+                    </div>
+
+                    <!-- Поле ввода должности -->
+                    <div class="form-group">
+                        <label for="job_title">Должность*</label>
+                        <input type="text" placeholder="Ваша должность" id="job_title" name="job_title" required>
+                    </div>
+
+                    <!-- Поле ввода электронной почты -->
+                    <div class="form-group">
+                        <label for="email*">e-mail*</label>
+                        <!-- Укажите корректный e-mail -->
+                        <input type="email" value="@roga-i-kopyta.com" id="email" name="email" required>
+                    </div>
+
+                    <!-- Поле ввода рабочего телефона -->
+                    <div class="form-group">
+                        <label for="work_phone">Тел. рабочий*</label>
+                        <!-- Укажите корректный номер телефона -->
+                        <input type="tel" value="+7(800)000-00-00" id="work_phone" name="work_phone" required>
+                    </div>
+
+                    <!-- Поле ввода добавочного номера рабочего телефона -->
+                    <div class="form-group">
+                        <label for="ext_phone">Тел. добавочный</label>
+                        <input type="tel" placeholder="хх-хх" id="ext_phone" name="ext_phone">
+                    </div>
+
+                    <!-- Поле ввода мобильного -->
+                    <div class="form-group">
+                        <label for="mobile">Тел. мобильный</label>
+                        <input type="tel" placeholder="+7(ххх)ххх-хх-хх" id="mobile" name="mobile">
+                    </div>
+
+                    <div class="attention">
+                        <p> * - поля обязательные для заполнения</p>
+                    </div>
+
+                    <button type="submit">Сгенерировать QR-код</button>
+                </form>
+            </div>
+
+            <!-- Правый столбец -->
+            <div class="preview-section">
+                {% if card_image %}
+                <p class="fill-form">Ваш QR-код, {{ name }}</p>
+                <div class="result">
+
+
+                    <img src="data:image/png;base64,{{ card_image }}" alt="Generated Business Card">
+                    <div class="button-group">
+                        <a href="data:image/png;base64,{{ card_image }}" download="Мой QR-code контакта.png" class="download-btn">Скачать</a>
+                        <button onclick="window.print()" class="print-btn">Печать</button>
+                    </div>
+
+                    <!-- кнопка ссылки на шаблоны визиток -->
+                    <!-- Если у вас есть ресурс с размещенными шаблонами визиток, то укажите на него ссылку ниже -->
+                    <!-- иначе закоментируйте -->
+                    <div class="button-group">
+                        <a class="card-template-btn" href="localfile:server\Брендбук\Визитка">Перейти в папку "Шаблоны визиток"</a>
+                    </div>
+
+                </div>
+                {% else %}
+                <div class="result">
+                    <p class="fill-form">Здесь появится ваш QR-код</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

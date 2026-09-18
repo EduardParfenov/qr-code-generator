@@ -1,0 +1,44 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+context: |
+  Проект: qr-code-generator — веб-приложение на Flask, генерирующее QR-код
+  с контактом в формате vCard. Пользователь заполняет форму, приложение
+  создаёт vCard (vobject), кодирует в QR (qrcode) и накладывает на
+  фоновое изображение (Pillow). Результат — предпросмотр на странице,
+  скачивание PNG, печать.
+
+  Технологии: Python 3, Flask 3.0.2, qrcode, vobject, Pillow.
+  Frontend: чистые HTML (Jinja2), CSS, JS — без фреймворков и сборки.
+
+  Структура: весь backend в app.py (один модуль: 3 функции + 2 роута),
+  templates/index.html, static/ (style.css, main.js, white_page_square.png),
+  logs/info.log — логи создаваемых vCard (в .gitignore).
+
+  Конвенции:
+  - Язык кода, комментариев, UI и документации — русский.
+  - Коммит-сообщения на русском.
+  - Тестов нет; проверка — ручной запуск и генерация QR через форму.
+  - Настройки компании (название, сайт, адрес) осознанно захардкожены
+    в generate_vcard(); позиция QR — константы QR_X_POS / QR_Y_POS.
+  - Папка input/ — вспомогательные данные, не использовать и не коммитить.
+  - При изменении версии обновлять VERSION и CHANGELOG.md.
+
+# Per-artifact rules (optional)
+rules:
+  proposal:
+    - Писать на русском языке
+    - Всегда включать раздел "Не входит в объём" (Non-goals)
+  tasks:
+    - Задачи формулировать коротко и проверяемо
+    - "Последняя задача — ручная проверка: запуск приложения и генерация QR"
+
+# Per-operation guidance (optional)
+operations:
+  apply:
+    guidance:
+      - Изменения кода делать минимальными, следовать стилю app.py
+  archive:
+    guidance:
+      - После архивации обновить VERSION и CHANGELOG.md
