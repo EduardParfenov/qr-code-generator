@@ -10,6 +10,9 @@ import os
 
 app = Flask(__name__)
 
+# Создаём папку для логов, если её нет (папка в .gitignore и отсутствует в свежем клоне)
+os.makedirs("./logs", exist_ok=True)
+
 # Настройка логирования
 logging.basicConfig(
     level=logging.INFO,
