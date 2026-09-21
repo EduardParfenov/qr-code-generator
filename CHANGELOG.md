@@ -2,6 +2,12 @@
 
 История изменений проекта. Формат: [Семантическое версионирование](https://semver.org/lang/ru/).
 
+## [1.1.1] - 2026-09-21
+
+### Добавлено
+
+- Тесты на pytest (`tests/test_app.py`): юнит-тесты `generate_vcard`, `generate_qr_code`, `create_business_card` и smoke-тесты роутов Flask. Запуск: `pip install -r requirements-dev.txt && python -m pytest`.
+
 ## [1.1.0] - 2026-09-18
 
 ### Добавлено

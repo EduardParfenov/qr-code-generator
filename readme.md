@@ -70,6 +70,13 @@ python app.py
 Откройте браузер и перейдите по адресу:
 http://127.0.0.1:5000
 
+## Запуск тестов
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
 ## Структура проекта
 
 ```
