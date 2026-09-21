@@ -5,6 +5,9 @@
     pip install -r requirements-dev.txt
     python -m pytest
 """
+import logging
+from logging.handlers import RotatingFileHandler
+
 import pytest
 import vobject
 
@@ -86,11 +89,23 @@ def test_vcard_reads_company_from_env(monkeypatch):
 
 
 def test_vcard_with_empty_optional_phones(clean_company_env):
-    """Необязательные телефоны могут быть пустыми — vCard всё равно формируется"""
+    """Пустые необязательные телефоны НЕ попадают в vCard"""
     data = {**TEST_DATA, "ext_phone": "", "mobile": ""}
     vcard = generate_vcard(**data)
     parsed = vobject.readOne(vcard)
     assert parsed.fn.value == TEST_DATA["name"]
+    tel_lines = [l for l in vcard.splitlines() if l.startswith("TEL")]
+    assert len(tel_lines) == 1  # только рабочий телефон
+    assert "TYPE=CELL" not in vcard
+
+
+def test_vcard_with_filled_mobile_only(clean_company_env):
+    """Заполненный мобильный попадает в vCard, пустой добавочный — нет"""
+    data = {**TEST_DATA, "ext_phone": ""}
+    vcard = generate_vcard(**data)
+    tel_lines = [l for l in vcard.splitlines() if l.startswith("TEL")]
+    assert len(tel_lines) == 2  # рабочий + мобильный
+    assert "TYPE=CELL" in vcard
 
 
 # --- generate_qr_code ---
@@ -202,3 +217,10 @@ def test_generate_lists_all_errors(client):
 def test_generate_valid_with_empty_optional_fields(client):
     response = client.post("/generate", data={**FORM_DATA, "ext_phone": "", "mobile": ""})
     assert response.status_code == 200
+
+
+# --- Логирование ---
+
+def test_log_handler_has_rotation():
+    """Лог ротируется по размеру (RotatingFileHandler), а не растёт бесконечно"""
+    assert any(isinstance(h, RotatingFileHandler) for h in logging.getLogger().handlers)

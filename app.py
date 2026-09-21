@@ -4,6 +4,7 @@ import base64
 import io
 import vobject
 import logging
+from logging.handlers import RotatingFileHandler
 import os
 import re
 from dotenv import load_dotenv
@@ -18,10 +19,12 @@ app = Flask(__name__)
 os.makedirs("./logs", exist_ok=True)
 
 # Настройка логирования
+# force=True: применяем конфигурацию, даже если кто-то настроил логирование раньше (например, pytest)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("./logs/info.log", encoding="utf-8")]
+    handlers=[RotatingFileHandler("./logs/info.log", maxBytes=1_000_000, backupCount=3, encoding="utf-8")],  # ротация: 1 МБ, 3 архивные копии
+    force=True
     )
 
 
@@ -63,15 +66,17 @@ def generate_vcard(name, job_title, email, phone, ext_phone, mobile):
     '''
     Если добавочный телефон нужно отображать после рабочего номера, использейте код ниже
     '''
-    # добавочный телефон
-    ext_tel = vcard.add('tel')
-    ext_tel.value = f"{ext_phone}"
-    ext_tel.type_param = 'WORK'
+    # добавочный телефон (необязательный — добавляем только если заполнен)
+    if ext_phone:
+        ext_tel = vcard.add('tel')
+        ext_tel.value = f"{ext_phone}"
+        ext_tel.type_param = 'WORK'
 
-    # мобильный телефон
-    mobile_tel = vcard.add('tel')
-    mobile_tel.value = mobile
-    mobile_tel.type_param = 'CELL'
+    # мобильный телефон (необязательный — добавляем только если заполнен)
+    if mobile:
+        mobile_tel = vcard.add('tel')
+        mobile_tel.value = mobile
+        mobile_tel.type_param = 'CELL'
     # url
     vcard.add('url').value = os.getenv("COMPANY_SITE", 'roga-i-kopyta.com')  # Адрес сайта (задаётся в .env)
     # адрес
@@ -114,7 +119,6 @@ def create_business_card(name, job_title, email, phone, ext_phone, mobile):
     return generate_qr_code(vcard_data)
 
 
-Flask
 @app.route('/', methods=['GET'])
 def index():
     """Отображает главную страницу"""
@@ -177,6 +181,9 @@ def generate_card():
     return render_template('index.html', card_image=img_str, name = name)
 
 # Запуск
-# Для работы локально по IP, без сервера
+# По умолчанию — локально с debug; для сервера задайте FLASK_DEBUG=false и FLASK_HOST в .env
 if __name__ == '__main__':
-    app.run(debug=True, host="127.0.0.1", port=5000)  # Если размещаете на сервере поменяйте ip-адрес
+    debug = os.getenv("FLASK_DEBUG", "true").lower() in ("1", "true", "yes")
+    host = os.getenv("FLASK_HOST", "127.0.0.1")
+    port = int(os.getenv("FLASK_PORT", "5000"))
+    app.run(debug=debug, host=host, port=port)
