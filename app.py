@@ -6,6 +6,7 @@ import io
 import vobject
 import logging
 import os
+import re
 from dotenv import load_dotenv
 
 
@@ -139,19 +140,52 @@ def index():
     return render_template('index.html')
 
 
+# Простой формат email: текст@текст.текст (без полной RFC-проверки)
+EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+# Обязательные поля формы: имя поля -> название для сообщения об ошибке
+REQUIRED_FIELDS = {
+    "name": "Ф.И.О.",
+    "job_title": "Должность",
+    "work_phone": "Тел. рабочий",
+}
+
+
+def validate_form(form):
+    """
+    Проверяет данные формы на сервере.
+    Возвращает список текстов ошибок (пустой список — данные валидны).
+    """
+    errors = []
+    for field, label in REQUIRED_FIELDS.items():
+        if not form.get(field, "").strip():
+            errors.append(f'Заполните поле "{label}"')
+    email = form.get("email", "").strip()
+    if not email:
+        errors.append('Заполните поле "e-mail"')
+    elif not EMAIL_PATTERN.match(email):
+        errors.append('Поле "e-mail" должно быть в формате текст@текст.текст')
+    return errors
+
+
 @app.route('/generate', methods=['POST'])
 def generate_card():
     """
     Обрабатывает отправку формы, генерирует и возвращает QR-code.
     Преобразует изображение в формат base64 для встраивания в HTML.
+    При ошибках валидации возвращает форму с сообщением (HTTP 400).
     """
+    # Серверная валидация (HTML5-проверку на клиенте легко обойти)
+    errors = validate_form(request.form)
+    if errors:
+        return render_template('index.html', error="; ".join(errors)), 400
     # Получаем данные из формы
-    name = request.form['name']
-    job_title = request.form['job_title']
-    email = request.form['email']
-    phone = request.form['work_phone']
-    ext_phone = request.form['ext_phone']
-    mobile = request.form['mobile']
+    name = request.form.get('name', '').strip()
+    job_title = request.form.get('job_title', '').strip()
+    email = request.form.get('email', '').strip()
+    phone = request.form.get('work_phone', '').strip()
+    ext_phone = request.form.get('ext_phone', '').strip()
+    mobile = request.form.get('mobile', '').strip()
     # Генерируем QR-код
     card = create_business_card(name, job_title, email, phone, ext_phone, mobile)
     # Конвертируем в base64

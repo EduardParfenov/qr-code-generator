@@ -16,6 +16,7 @@ from app import (
     generate_vcard,
     generate_qr_code,
     create_business_card,
+    validate_form,
 )
 
 # Переменные окружения, влияющие на vCard
@@ -143,3 +144,62 @@ def test_generate_returns_image_preview(client):
     html = response.get_data(as_text=True)
     assert "data:image/png;base64," in html
     assert TEST_DATA["name"] in html
+
+
+# --- Серверная валидация ---
+
+FORM_DATA = {
+    "name": TEST_DATA["name"],
+    "job_title": TEST_DATA["job_title"],
+    "email": TEST_DATA["email"],
+    "work_phone": TEST_DATA["phone"],
+    "ext_phone": TEST_DATA["ext_phone"],
+    "mobile": TEST_DATA["mobile"],
+}
+
+
+def test_validate_form_valid_data():
+    assert validate_form(FORM_DATA) == []
+
+
+def test_validate_form_required_fields():
+    errors = validate_form({})
+    assert len(errors) == 4  # ФИО, должность, рабочий телефон, email
+
+
+def test_validate_form_strips_whitespace():
+    data = {**FORM_DATA, "name": "   "}
+    assert any("Ф.И.О." in e for e in validate_form(data))
+
+
+def test_validate_form_bad_email():
+    for bad_email in ["не-почта", "a@", "@b.ru", "a@b"]:
+        assert validate_form({**FORM_DATA, "email": bad_email}), bad_email
+
+
+def test_generate_missing_required_field_returns_400(client):
+    data = {k: v for k, v in FORM_DATA.items() if k != "name"}
+    response = client.post("/generate", data=data)
+    assert response.status_code == 400
+    html = response.get_data(as_text=True)
+    assert "Ф.И.О." in html
+    assert "data:image/png;base64," not in html
+
+
+def test_generate_bad_email_returns_400(client):
+    response = client.post("/generate", data={**FORM_DATA, "email": "не-почта"})
+    assert response.status_code == 400
+    assert "e-mail" in response.get_data(as_text=True)
+
+
+def test_generate_lists_all_errors(client):
+    response = client.post("/generate", data={**FORM_DATA, "name": "", "email": "криво"})
+    assert response.status_code == 400
+    html = response.get_data(as_text=True)
+    assert "Ф.И.О." in html
+    assert "e-mail" in html
+
+
+def test_generate_valid_with_empty_optional_fields(client):
+    response = client.post("/generate", data={**FORM_DATA, "ext_phone": "", "mobile": ""})
+    assert response.status_code == 200
