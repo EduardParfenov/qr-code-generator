@@ -25,6 +25,8 @@
                     {{ error }}
                 </div>
                 {% endif %}
+                <!-- Блок для клиентских сообщений об ошибках (заполняется из main.js) -->
+                <div id="js-error" class="error-message" style="display: none;"></div>
                 <form id="businessCardForm" method="POST" action="{{ url_for('generate_card') }}" enctype="multipart/form-data">
                     <p class="fill-form">Заполните форму</p>
                     <!-- Поле ввода имени -->
