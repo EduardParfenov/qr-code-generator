@@ -6,7 +6,11 @@ import io
 import vobject
 import logging
 import os
+from dotenv import load_dotenv
 
+
+# Загружаем настройки из .env (если файла нет — работают значения по умолчанию)
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -21,8 +25,18 @@ logging.basicConfig(
     )
 
 
-QR_X_POS = 0.055 # Позиция QR-code по горизонтали
-QR_Y_POS = 0.055 # Позиция QR-code по вертикали
+QR_X_POS = float(os.getenv("QR_X_POS", "0.055")) # Позиция QR-code по горизонтали
+QR_Y_POS = float(os.getenv("QR_Y_POS", "0.055")) # Позиция QR-code по вертикали
+QR_SIZE_RATIO = float(os.getenv("QR_SIZE_RATIO", "0.9")) # Размер QR-code (доля от высоты фона)
+
+
+@app.context_processor
+def inject_form_defaults():
+    """Предзаполненные значения полей формы (задаются в .env)"""
+    return dict(
+        email_default=os.getenv("FORM_EMAIL_DEFAULT", "@roga-i-kopyta.com"),
+        phone_default=os.getenv("FORM_WORK_PHONE_DEFAULT", "+7(800)000-00-00"),
+    )
 
 
 def generate_vcard(name, job_title, email, phone, ext_phone, mobile):
@@ -33,7 +47,8 @@ def generate_vcard(name, job_title, email, phone, ext_phone, mobile):
     # Ф.И.О.
     vcard.add('fn').value = name
     # должность
-    vcard.add('title').value = f'ООО "Рога и копыта", {job_title}' # Введите название вашей организации
+    company_name = os.getenv("COMPANY_NAME", 'ООО "Рога и копыта"') # Название организации (задаётся в .env)
+    vcard.add('title').value = f'{company_name}, {job_title}'
     # e-mail
     vcard.add('email').value = email
     # рабочий телефон
@@ -63,15 +78,15 @@ def generate_vcard(name, job_title, email, phone, ext_phone, mobile):
     mobile_tel.value = mobile
     mobile_tel.type_param = 'CELL'
     # url
-    vcard.add('url').value = 'roga-i-kopyta.com'  # Укажите адрес сайта
+    vcard.add('url').value = os.getenv("COMPANY_SITE", 'roga-i-kopyta.com')  # Адрес сайта (задаётся в .env)
     # адрес
     adr = vcard.add('adr')
     adr.value = vobject.vcard.Address(
-    street="ул. Рогов и копыт, 34",  # Укажите наименование улицы и номер дома
-    city="Нью-Йорк",  # Укажите город
-    region="Нью-Йорская область",  # Укажите область
-    code="4444444",  # Укажите почтовый индекс
-    country="Россия")
+    street=os.getenv("COMPANY_ADDRESS_STREET", "ул. Рогов и копыт, 34"),  # Улица и номер дома
+    city=os.getenv("COMPANY_ADDRESS_CITY", "Нью-Йорк"),  # Город
+    region=os.getenv("COMPANY_ADDRESS_REGION", "Нью-Йорская область"),  # Область
+    code=os.getenv("COMPANY_ADDRESS_CODE", "4444444"),  # Почтовый индекс
+    country=os.getenv("COMPANY_ADDRESS_COUNTRY", "Россия"))
     adr.type_param = 'WORK'
 
     logging.info(f"Создана vCard: {vcard.serialize()}") # Запись в лог
@@ -104,7 +119,7 @@ def create_business_card(name, job_title, email, phone, ext_phone, mobile):
 
     # Сгенерировать и разместить QR-код
     width, height = template.size
-    qr_size = int(height * 0.9)  # Размер QR-кода
+    qr_size = int(height * QR_SIZE_RATIO)  # Размер QR-кода
     vcard_data = generate_vcard(name, job_title, email, phone, ext_phone, mobile)
     qr_image = generate_qr_code(vcard_data).resize((qr_size, qr_size))
 

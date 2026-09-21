@@ -43,20 +43,20 @@
                     <div class="form-group">
                         <label for="email*">e-mail*</label>
                         <!-- Укажите корректный e-mail -->
-                        <input type="email" value="@roga-i-kopyta.com" id="email" name="email" required>
+                        <input type="email" value="{{ email_default }}" id="email" name="email" required>
                     </div>
 
                     <!-- Поле ввода рабочего телефона -->
                     <div class="form-group">
                         <label for="work_phone">Тел. рабочий*</label>
                         <!-- Укажите корректный номер телефона -->
-                        <input type="tel" value="+7(800)000-00-00" id="work_phone" name="work_phone" required>
+                        <input type="tel" value="{{ phone_default }}" id="work_phone" name="work_phone" required>
                     </div>
 
                     <!-- Поле ввода добавочного номера рабочего телефона -->
                     <div class="form-group">
                         <label for="ext_phone">Тел. добавочный</label>
-                        <input type="tel" placeholder="хх-хх" id="ext_phone" name="ext_phone">
+                        <input type="tel" placeholder="хххх" id="ext_phone" name="ext_phone">
                     </div>
 
                     <!-- Поле ввода мобильного -->
