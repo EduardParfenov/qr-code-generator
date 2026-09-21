@@ -5,11 +5,8 @@
     pip install -r requirements-dev.txt
     python -m pytest
 """
-import io
-
 import pytest
 import vobject
-from PIL import Image
 
 from app import (
     app,
@@ -110,10 +107,12 @@ def test_qr_code_returns_square_image():
 
 # --- create_business_card ---
 
-def test_business_card_matches_background_size():
+def test_business_card_returns_square_image():
+    """Чистый QR-код: квадратное изображение без композиции с фоном"""
     card = create_business_card(**TEST_DATA)
-    with Image.open("static/white_page_square.png") as template:
-        assert card.size == template.size
+    width, height = card.size
+    assert width == height
+    assert width > 0
 
 
 # --- Роуты Flask (smoke-тесты) ---

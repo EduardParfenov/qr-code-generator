@@ -21,7 +21,7 @@
 ```
 qr-code-generator/
 ├── app.py                     # Весь backend: vCard + QR + Flask-роуты
-├── static/                    # style.css, main.js, white_page_square.png (фон)
+├── static/                    # style.css, main.js
 ├── templates/                 # index.html (форма + предпросмотр)
 ├── logs/                      # info.log — создаётся в рантайме, в .gitignore
 ├── openspec/                  # OpenSpec: config.yaml, specs/, changes/
@@ -77,7 +77,6 @@ python -m pytest
 
 ## Известные нюансы кода
 
-- Данные компании (название, сайт, адрес) захардкожены в `generate_vcard()` — это осознанное решение, см. readme.
-- Позиция QR на фоне — константы `QR_X_POS` / `QR_Y_POS` в начале `app.py`.
-- В `app.py:117` есть безобидная «осиротевшая» строка `Flask` — не трогать без отдельной задачи.
+- Данные компании (название, сайт, адрес) и значения полей формы задаются в `.env` (см. readme, раздел «Настройка»).
+- В `app.py` есть безобидная «осиротевшая» строка `Flask` — не трогать без отдельной задачи.
 - `debug=True` и `host="127.0.0.1"` — для локального запуска; при деплое менять осознанно.

@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, send_file
-from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import base64
 import io
@@ -24,11 +23,6 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[logging.FileHandler("./logs/info.log", encoding="utf-8")]
     )
-
-
-QR_X_POS = float(os.getenv("QR_X_POS", "0.055")) # Позиция QR-code по горизонтали
-QR_Y_POS = float(os.getenv("QR_Y_POS", "0.055")) # Позиция QR-code по вертикали
-QR_SIZE_RATIO = float(os.getenv("QR_SIZE_RATIO", "0.9")) # Размер QR-code (доля от высоты фона)
 
 
 @app.context_processor
@@ -113,24 +107,11 @@ def generate_qr_code(vcard_data):
 
 def create_business_card(name, job_title, email, phone, ext_phone, mobile):
     """
-    Генерирует сам QR-code
+    Генерирует QR-code с контактом пользователя
     - name, job_title, email, phone, ext_phone, mobile: контактная информация пользователя
     """
-    template = Image.open('static/white_page_square.png')  # Фон на котором размещается QR-code
-
-    # Сгенерировать и разместить QR-код
-    width, height = template.size
-    qr_size = int(height * QR_SIZE_RATIO)  # Размер QR-кода
     vcard_data = generate_vcard(name, job_title, email, phone, ext_phone, mobile)
-    qr_image = generate_qr_code(vcard_data).resize((qr_size, qr_size))
-
-    # Разместить QR-код на фоне
-    qr_x = int(width * QR_X_POS)
-    qr_y = int(height * QR_Y_POS)
-    white_bg = Image.new('RGB', (qr_size + 20, qr_size + 20), 'white')
-    template.paste(white_bg, (qr_x - 10, qr_y - 10))
-    template.paste(qr_image, (qr_x, qr_y))
-    return template
+    return generate_qr_code(vcard_data)
 
 
 Flask
