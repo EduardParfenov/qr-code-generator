@@ -1,21 +1,13 @@
-function copyImageFallback(base64Data) {
-    try {
-        // Создаем временную ссылку для скачивания
-        const link = document.createElement('a');
-        link.href = `data:image/png;base64,${base64Data}`;
-        link.download = 'qr-code.png';
+// --- Копирование QR-кода в буфер обмена ---
 
-        // Показываем сообщение о скачивании
-        if (confirm('Копирование недоступно. Скачать изображение?')) {
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-    } catch (error) {
-        console.error('Ошибка:', error);
-        alert('Не удалось обработать изображения');
-    }
+// Показывает всплывающую подсказку у кнопки копирования (~2 секунды)
+function showCopyTooltip() {
+    const tooltip = document.getElementById('copy-tooltip');
+    if (!tooltip) return;
+    tooltip.classList.add('show');
+    setTimeout(function () {
+        tooltip.classList.remove('show');
+    }, 2000);
 }
 
 // --- Клиентская валидация и маски ввода ---
@@ -70,6 +62,30 @@ document.addEventListener('DOMContentLoaded', function () {
     if (extPhone) {
         extPhone.addEventListener('input', function () {
             extPhone.value = extPhone.value.replace(/[^\d-]/g, '');
+        });
+    }
+
+    // Копирование QR-кода в буфер обмена.
+    // Clipboard API доступен только в secure context (HTTPS или localhost)
+    // и только по жесту пользователя; при недоступном API копирование
+    // остаётся возможным через правый клик по изображению
+    const copyBtn = document.getElementById('copy-qr-btn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', async function () {
+            if (!navigator.clipboard || !window.ClipboardItem) return;
+            const img = document.querySelector('.result img');
+            if (!img) return;
+            try {
+                // data URL обрабатывается локально, запроса к серверу нет
+                const response = await fetch(img.src);
+                const blob = await response.blob();
+                await navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]);
+                showCopyTooltip();
+            } catch (error) {
+                console.error('Не удалось скопировать QR-код:', error);
+            }
         });
     }
 
