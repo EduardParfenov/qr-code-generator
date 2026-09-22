@@ -31,26 +31,26 @@
                     <p class="fill-form">Заполните форму</p>
                     <!-- Поле ввода имени -->
                     <div class="form-group">
-                        <label for="name">Ф.И.О.*</label>
+                        <label class="required" for="name">Ф.И.О.</label>
                         <input type="text" placeholder="Фамилия Имя Отчество" id="name" name="name" required>
                     </div>
 
                     <!-- Поле ввода должности -->
                     <div class="form-group">
-                        <label for="job_title">Должность*</label>
+                        <label class="required" for="job_title">Должность</label>
                         <input type="text" placeholder="Ваша должность" id="job_title" name="job_title" required>
                     </div>
 
                     <!-- Поле ввода электронной почты -->
                     <div class="form-group">
-                        <label for="email*">e-mail*</label>
+                        <label class="required" for="email">e-mail</label>
                         <!-- Укажите корректный e-mail -->
                         <input type="email" value="{{ email_default }}" id="email" name="email" required>
                     </div>
 
                     <!-- Поле ввода рабочего телефона -->
                     <div class="form-group">
-                        <label for="work_phone">Тел. рабочий*</label>
+                        <label class="required" for="work_phone">Тел. рабочий</label>
                         <!-- Укажите корректный номер телефона -->
                         <input type="tel" value="{{ phone_default }}" id="work_phone" name="work_phone" required>
                     </div>
@@ -86,6 +86,7 @@
                     <div class="button-group">
                         <a href="data:image/png;base64,{{ card_image }}" download="Мой QR-code контакта.png" class="download-btn">Скачать</a>
                         <button onclick="window.print()" class="print-btn">Печать</button>
+                        <button type="button" id="copy-qr-btn" class="copy-btn">Копировать<span class="copy-tooltip" id="copy-tooltip">QR-скопирован в буфер</span></button>
                     </div>
 
                     <!-- Кнопка ссылки на шаблоны визиток: показывается, если задана CARD_TEMPLATE_URL в .env -->
@@ -97,9 +98,7 @@
 
                 </div>
                 {% else %}
-                <div class="result">
-                    <p class="fill-form">Здесь появится ваш QR-код</p>
-                </div>
+                <p class="fill-form">Здесь появится ваш QR-код</p>
                 {% endif %}
             </div>
         </div>

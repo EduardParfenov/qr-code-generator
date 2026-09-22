@@ -6,6 +6,7 @@
   --secondary-text: #a3a3a5;   /* Светлый серый для вторичного текста */
   --background: #fbfbfd;       /* Светлый цвет фона */
   --card-background: #ffffff;  /* Белый цвет для фона визитки */
+  --required-color: #d32f2f;   /* Красный цвет звёздочки обязательного поля */
 }
 
 /* Сброс стилей браузера по умолчанию и улучшение отображения текста */
@@ -97,6 +98,12 @@ label {
   color: #009639;
 }
 
+/* Красная звёздочка у подписей обязательных полей (класс required на label) */
+label.required::after {
+  content: '*';
+  color: var(--required-color);
+}
+
 ::placeholder {
     color: #999 !important;
     opacity: 0.7 !important;
@@ -152,6 +159,7 @@ button {
   color: white;
   font-size: 17px;
   font-weight: 400;
+  line-height: 1.47059;    /* как у body — эталон высоты для всех кнопок */
   padding: 12px 24px;
   border: none;
   border-radius: 12px;
@@ -208,10 +216,16 @@ button:hover {
   margin-top: 20px;
 }
 
-/* Общие стили кнопок Скачать и Печать */
+/* Общие стили кнопок Скачать, Печать и Копировать */
 .download-btn,
-.print-btn {
+.print-btn,
+.copy-btn {
   flex: 1;
+  display: flex;             /* Центрирование надписи по обеим осям */
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;       /* Надпись всегда в одну строку */
+  line-height: 1.47059;      /* как у button — одинаковая высота у ссылки и кнопок */
   text-decoration: none;
   padding: 12px 24px;
   border-radius: 12px;
@@ -232,6 +246,36 @@ button:hover {
   color:  #1d1d1f;
 }
 
+/* Стиль кнопки Копировать (зелёная; position — якорь для всплывающей подсказки) */
+.copy-btn {
+  background-color: #009639;
+  color: white;
+  position: relative;
+}
+
+/* Всплывающая подсказка «QR-скопирован в буфер» */
+.copy-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1d1d1f;
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.copy-tooltip.show {
+  opacity: 1;
+  visibility: visible;
+}
+
 /* Стиль кнопки Шаблон визитки */
 .card-template-btn {
   flex: 1;
@@ -246,7 +290,8 @@ button:hover {
 }
 
 /* Эффекты наведения на кнопку действия */
-.download-btn:hover {
+.download-btn:hover,
+.copy-btn:hover {
   opacity: 0.9;
   background-color: #007e30;
   transform: translateY(-1px);
@@ -270,6 +315,43 @@ input[type="checkbox"] {
   height: 20px;
   margin-right: 8px;
   vertical-align: middle;
+}
+
+/* Выравнивание колонок и кнопок — только при двухколоночном макете */
+@media (min-width: 969px) {
+  /* Секции — flex-колонки: нижние ряды кнопок прижимаются к низу
+     и оказываются на одном уровне в левой и правой колонках */
+  .form-section,
+  .preview-section {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Форма заполняет левую колонку, кнопка «Сгенерировать QR-код» — внизу */
+  #businessCardForm {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #businessCardForm button[type="submit"] {
+    margin-top: auto;
+  }
+
+  /* Область результата заполняет правую колонку;
+     QR-код центрируется по вертикали между надписью и верхним рядом кнопок.
+     Нижний margin убираем: иначе ряд кнопок справа оказывается на 25px
+     выше кнопки «Сгенерировать QR-код» слева */
+  .preview-section .result {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+  }
+
+  .result img {
+    margin: auto 0;
+  }
 }
 
 /* Корректировки макета для печати */
