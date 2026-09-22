@@ -88,12 +88,12 @@
                         <button onclick="window.print()" class="print-btn">Печать</button>
                     </div>
 
-                    <!-- кнопка ссылки на шаблоны визиток -->
-                    <!-- Если у вас есть ресурс с размещенными шаблонами визиток, то укажите на него ссылку ниже -->
-                    <!-- иначе закоментируйте -->
+                    <!-- Кнопка ссылки на шаблоны визиток: показывается, если задана CARD_TEMPLATE_URL в .env -->
+                    {% if card_template_url %}
                     <div class="button-group">
-                        <a class="card-template-btn" href="localfile:server\Брендбук\Визитка">Перейти в папку "Шаблоны визиток"</a>
+                        <a class="card-template-btn" href="{{ card_template_url }}">Перейти в папку "Шаблоны визиток"</a>
                     </div>
+                    {% endif %}
 
                 </div>
                 {% else %}

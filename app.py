@@ -34,6 +34,7 @@ def inject_form_defaults():
     return dict(
         email_default=os.getenv("FORM_EMAIL_DEFAULT", "@roga-i-kopyta.com"),
         phone_default=os.getenv("FORM_WORK_PHONE_DEFAULT", "+7(800)000-00-00"),
+        card_template_url=os.getenv("CARD_TEMPLATE_URL", ""),  # если пусто — кнопка не показывается
     )
 
 

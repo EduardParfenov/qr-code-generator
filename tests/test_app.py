@@ -219,6 +219,25 @@ def test_generate_valid_with_empty_optional_fields(client):
     assert response.status_code == 200
 
 
+# --- Кнопка «Шаблоны визиток» ---
+
+def test_card_template_button_hidden_without_env(monkeypatch, client):
+    """Без CARD_TEMPLATE_URL кнопка не отображается — ни на форме, ни в результате"""
+    monkeypatch.delenv("CARD_TEMPLATE_URL", raising=False)
+    assert "card-template-btn" not in client.get("/").get_data(as_text=True)
+    response = client.post("/generate", data=FORM_DATA)
+    assert "card-template-btn" not in response.get_data(as_text=True)
+
+
+def test_card_template_button_shown_with_env(monkeypatch, client):
+    """С заданной CARD_TEMPLATE_URL кнопка видна и ведёт на заданный адрес"""
+    monkeypatch.setenv("CARD_TEMPLATE_URL", "https://example.com/templates")
+    response = client.post("/generate", data=FORM_DATA)
+    html = response.get_data(as_text=True)
+    assert "card-template-btn" in html
+    assert 'href="https://example.com/templates"' in html
+
+
 # --- Логирование ---
 
 def test_log_handler_has_rotation():
