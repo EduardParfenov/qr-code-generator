@@ -25,6 +25,8 @@
                     {{ error }}
                 </div>
                 {% endif %}
+                <!-- Блок для клиентских сообщений об ошибках (заполняется из main.js) -->
+                <div id="js-error" class="error-message" style="display: none;"></div>
                 <form id="businessCardForm" method="POST" action="{{ url_for('generate_card') }}" enctype="multipart/form-data">
                     <p class="fill-form">Заполните форму</p>
                     <!-- Поле ввода имени -->
@@ -43,20 +45,20 @@
                     <div class="form-group">
                         <label for="email*">e-mail*</label>
                         <!-- Укажите корректный e-mail -->
-                        <input type="email" value="@roga-i-kopyta.com" id="email" name="email" required>
+                        <input type="email" value="{{ email_default }}" id="email" name="email" required>
                     </div>
 
                     <!-- Поле ввода рабочего телефона -->
                     <div class="form-group">
                         <label for="work_phone">Тел. рабочий*</label>
                         <!-- Укажите корректный номер телефона -->
-                        <input type="tel" value="+7(800)000-00-00" id="work_phone" name="work_phone" required>
+                        <input type="tel" value="{{ phone_default }}" id="work_phone" name="work_phone" required>
                     </div>
 
                     <!-- Поле ввода добавочного номера рабочего телефона -->
                     <div class="form-group">
                         <label for="ext_phone">Тел. добавочный</label>
-                        <input type="tel" placeholder="хх-хх" id="ext_phone" name="ext_phone">
+                        <input type="tel" placeholder="хххх" id="ext_phone" name="ext_phone">
                     </div>
 
                     <!-- Поле ввода мобильного -->
@@ -86,12 +88,12 @@
                         <button onclick="window.print()" class="print-btn">Печать</button>
                     </div>
 
-                    <!-- кнопка ссылки на шаблоны визиток -->
-                    <!-- Если у вас есть ресурс с размещенными шаблонами визиток, то укажите на него ссылку ниже -->
-                    <!-- иначе закоментируйте -->
+                    <!-- Кнопка ссылки на шаблоны визиток: показывается, если задана CARD_TEMPLATE_URL в .env -->
+                    {% if card_template_url %}
                     <div class="button-group">
-                        <a class="card-template-btn" href="localfile:server\Брендбук\Визитка">Перейти в папку "Шаблоны визиток"</a>
+                        <a class="card-template-btn" href="{{ card_template_url }}">Перейти в папку "Шаблоны визиток"</a>
                     </div>
+                    {% endif %}
 
                 </div>
                 {% else %}

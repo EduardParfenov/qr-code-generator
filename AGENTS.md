@@ -14,14 +14,14 @@
 - **Backend:** Python 3, Flask 3.0.2
 - **Библиотеки:** `qrcode` (QR), `vobject` (vCard), `Pillow` (композиция изображения)
 - **Frontend:** чистые HTML (Jinja2), CSS, JavaScript — без фреймворков и сборки
-- **Тесты:** отсутствуют
+- **Тесты:** pytest (`tests/`, dev-зависимости в `requirements-dev.txt`)
 
 ## Структура
 
 ```
 qr-code-generator/
 ├── app.py                     # Весь backend: vCard + QR + Flask-роуты
-├── static/                    # style.css, main.js, white_page_square.png (фон)
+├── static/                    # style.css, main.js
 ├── templates/                 # index.html (форма + предпросмотр)
 ├── logs/                      # info.log — создаётся в рантайме, в .gitignore
 ├── openspec/                  # OpenSpec: config.yaml, specs/, changes/
@@ -40,8 +40,17 @@ pip install -r requirements.txt
 python app.py        # http://127.0.0.1:5000 (debug=True)
 ```
 
-Тестов нет. Проверка изменений — ручная: запустить приложение, сгенерировать
-QR-код через форму, отсканировать камерой телефона.
+Тесты:
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+Проверка изменений: сначала `python -m pytest`, затем при необходимости ручная —
+запустить приложение, сгенерировать QR-код через форму, отсканировать камерой телефона.
+На GitHub работает CI (`.github/workflows/ci.yml`): тесты прогоняются на push
+в `main` и на каждый pull request в `main`.
 
 ## Конвенции
 
@@ -70,7 +79,6 @@ QR-код через форму, отсканировать камерой те�
 
 ## Известные нюансы кода
 
-- Данные компании (название, сайт, адрес) захардкожены в `generate_vcard()` — это осознанное решение, см. readme.
-- Позиция QR на фоне — константы `QR_X_POS` / `QR_Y_POS` в начале `app.py`.
-- В `app.py:117` есть безобидная «осиротевшая» строка `Flask` — не трогать без отдельной задачи.
-- `debug=True` и `host="127.0.0.1"` — для локального запуска; при деплое менять осознанно.
+- Данные компании (название, сайт, адрес), значения полей формы и параметры запуска (`FLASK_DEBUG`/`FLASK_HOST`/`FLASK_PORT`) задаются в `.env` (см. readme, раздел «Настройка»).
+- Лог `logs/info.log` ротируется (1 МБ × 3 копии, `RotatingFileHandler`).
+- Версия Python зафиксирована в `.python-version` (3.11.1).
