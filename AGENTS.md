@@ -27,6 +27,7 @@ qr-code-generator/
 ├── Dockerfile                 # Production-образ (python:3.11-slim + gunicorn, порт 8000)
 ├── docker-compose.yml         # Запуск контейнера: container_name qr-app, общая сеть nginx-net, env_file, restart, ротация логов
 ├── .dockerignore              # Исключения из образа (.env, .venv, logs/ и др.)
+├── DEPLOY.md                  # Инструкция для админа: развертывание на сервере (+ адаптация под другие приложения)
 ├── openspec/                  # OpenSpec: config.yaml, specs/, changes/
 ├── .opencode/                 # Скиллы и команды opsx-* для opencode
 ├── input/                     # ВСПОМОГАТЕЛЬНЫЕ ДАННЫЕ: не читать, не использовать, не коммитить
