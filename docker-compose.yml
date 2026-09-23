@@ -1,0 +1,32 @@
+# Production-запуск qr-code-generator в Docker.
+# Схема: единый nginx (в контейнере) проксирует запросы на это приложение
+# через общую Docker-сеть по имени контейнера — порт наружу не публикуется.
+# Команды:
+#   docker compose up -d          — запуск
+#   docker compose logs -f        — логи
+#   docker compose down           — остановка
+#   docker compose up -d --build  — обновление (пересборка)
+services:
+  app:
+    build: .
+    # Стабильное имя: nginx обращается к приложению как http://qr-app:8000
+    container_name: qr-app
+    # Настройки компании и формы (см. .env.example); файл не вшивается в образ
+    env_file: .env
+    # Поднимать контейнер после перезагрузки сервера и после падения
+    restart: unless-stopped
+    # Общая сеть с nginx; порт на хост не публикуется (наружу смотрит только nginx)
+    networks:
+      - nginx-net
+    # Ротация логов средствами Docker (приложение пишет логи только в stdout)
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  # Создаётся один раз вручную: docker network create nginx-net
+  # Эту же сеть указывают все проекты и контейнер с nginx
+  nginx-net:
+    external: true

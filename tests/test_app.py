@@ -6,7 +6,6 @@
     python -m pytest
 """
 import logging
-from logging.handlers import RotatingFileHandler
 
 import pytest
 import vobject
@@ -240,6 +239,14 @@ def test_card_template_button_shown_with_env(monkeypatch, client):
 
 # --- Логирование ---
 
-def test_log_handler_has_rotation():
-    """Лог ротируется по размеру (RotatingFileHandler), а не растёт бесконечно"""
-    assert any(isinstance(h, RotatingFileHandler) for h in logging.getLogger().handlers)
+def test_log_handler_writes_to_stdout():
+    """Логи выводятся в stdout (StreamHandler) — в контейнере их собирает Docker"""
+    assert any(type(h) is logging.StreamHandler for h in logging.getLogger().handlers)
+
+
+def test_vcard_logged_to_stdout(client, caplog):
+    """Созданная vCard записывается в лог уровня INFO (виден через docker logs)"""
+    with caplog.at_level(logging.INFO):
+        response = client.post("/generate", data=FORM_DATA)
+    assert response.status_code == 200
+    assert any("Создана vCard" in record.message for record in caplog.records)

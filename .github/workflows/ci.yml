@@ -29,3 +29,6 @@ jobs:
 
       - name: Запустить тесты
         run: python -m pytest -v
+
+      - name: Собрать Docker-образ
+        run: docker build .

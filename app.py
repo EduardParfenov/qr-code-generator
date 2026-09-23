@@ -4,7 +4,6 @@ import base64
 import io
 import vobject
 import logging
-from logging.handlers import RotatingFileHandler
 import os
 import re
 from dotenv import load_dotenv
@@ -15,15 +14,14 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Создаём папку для логов, если её нет (папка в .gitignore и отсутствует в свежем клоне)
-os.makedirs("./logs", exist_ok=True)
-
-# Настройка логирования
+# Настройка логирования: логи пишем только в stdout —
+# в контейнере их собирает Docker (docker logs / docker compose logs),
+# при локальном запуске они видны в консоли
 # force=True: применяем конфигурацию, даже если кто-то настроил логирование раньше (например, pytest)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[RotatingFileHandler("./logs/info.log", maxBytes=1_000_000, backupCount=3, encoding="utf-8")],  # ротация: 1 МБ, 3 архивные копии
+    handlers=[logging.StreamHandler()],
     force=True
     )
 
