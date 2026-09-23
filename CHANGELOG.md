@@ -2,6 +2,23 @@
 
 История изменений проекта. Формат: [Семантическое версионирование](https://semver.org/lang/ru/).
 
+## [2.3.0] - 2026-09-23
+
+### Добавлено
+
+- Развертывание в Docker: `Dockerfile` (python:3.11-slim) и `docker-compose.yml` — production-запуск одной командой `docker compose up -d --build` за единым nginx reverse proxy (в контейнере). Приложение в контейнере запускается через gunicorn (порт 8000, workers из `GUNICORN_WORKERS`, по умолчанию 2), настройки передаются через `env_file: .env`, включён автоперезапуск (`restart: unless-stopped`). Порт на хост не публикуется: nginx обращается к приложению по имени контейнера (`qr-app`) через общую сеть `nginx-net`.
+- `.dockerignore`: `.env`, `.venv/`, `logs/`, `input/` и прочие служебные файлы не попадают в образ.
+- Шаг «Собрать Docker-образ» в CI (GitHub Actions): после тестов образ собирается на каждый push/PR в `main` (без публикации в registry).
+- В readme — раздел «Запуск в Docker»: общая сеть, compose, пример `conf.d/qr.conf` для nginx в контейнере, размещение нескольких проектов на одном сервере.
+
+### Изменено
+
+- **BREAKING (для способа чтения логов):** логи пишутся только в stdout, файл `logs/info.log` больше не ведётся. Просмотр: `docker compose logs` (`-f`, `--tail`, `--since`) или консоль при локальном запуске; выгрузка аудита — `docker compose logs > audit.txt`. Ротация логов (10 МБ × 3) выполняется Docker (logging driver json-file), а не приложением.
+
+### Удалено
+
+- Файловое логирование из `app.py`: `RotatingFileHandler` и автосоздание директории `logs/`.
+
 ## [2.2.2] - 2026-09-22
 
 ### Добавлено
