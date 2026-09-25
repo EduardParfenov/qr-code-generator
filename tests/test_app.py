@@ -218,6 +218,50 @@ def test_generate_valid_with_empty_optional_fields(client):
     assert response.status_code == 200
 
 
+# --- Липкая форма (введённые значения остаются в полях после отправки) ---
+
+def test_generate_preserves_form_values(client):
+    """Успешный POST: все шесть полей возвращаются в HTML с введёнными значениями"""
+    response = client.post("/generate", data=FORM_DATA)
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    for value in FORM_DATA.values():
+        assert f'value="{value}"' in html
+
+
+def test_generate_user_values_override_defaults(client):
+    """Введённые email и рабочий телефон приоритетнее значений по умолчанию"""
+    data = {**FORM_DATA, "email": "user@example.org", "work_phone": "+7(999)123-45-67"}
+    response = client.post("/generate", data=data)
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert 'value="user@example.org"' in html
+    assert 'value="+7(999)123-45-67"' in html
+
+
+def test_generate_error_preserves_form_values(client):
+    """Ошибка валидации: поля показывают введённые значения, включая невалидный email"""
+    data = {**FORM_DATA, "email": "не-почта"}
+    response = client.post("/generate", data=data)
+    assert response.status_code == 400
+    html = response.get_data(as_text=True)
+    for value in data.values():
+        assert f'value="{value}"' in html
+
+
+def test_index_shows_defaults_and_empty_fields(monkeypatch, client):
+    """GET /: email и рабочий телефон — дефолты, остальные поля пусты"""
+    monkeypatch.delenv("FORM_EMAIL_DEFAULT", raising=False)
+    monkeypatch.delenv("FORM_WORK_PHONE_DEFAULT", raising=False)
+    response = client.get("/")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert 'value="@roga-i-kopyta.com"' in html
+    assert 'value="+7(800)000-00-00"' in html
+    for field in ["name", "job_title", "ext_phone", "mobile"]:
+        assert f'name="{field}" value=""' in html
+
+
 # --- Кнопка «Шаблоны визиток» ---
 
 def test_card_template_button_hidden_without_env(monkeypatch, client):

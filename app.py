@@ -159,10 +159,6 @@ def generate_card():
     Преобразует изображение в формат base64 для встраивания в HTML.
     При ошибках валидации возвращает форму с сообщением (HTTP 400).
     """
-    # Серверная валидация (HTML5-проверку на клиенте легко обойти)
-    errors = validate_form(request.form)
-    if errors:
-        return render_template('index.html', error="; ".join(errors)), 400
     # Получаем данные из формы
     name = request.form.get('name', '').strip()
     job_title = request.form.get('job_title', '').strip()
@@ -170,6 +166,13 @@ def generate_card():
     phone = request.form.get('work_phone', '').strip()
     ext_phone = request.form.get('ext_phone', '').strip()
     mobile = request.form.get('mobile', '').strip()
+    # «Липкая форма»: введённые значения возвращаем в шаблон и при успехе, и при ошибке
+    form_values = dict(name=name, job_title=job_title, email=email,
+                       work_phone=phone, ext_phone=ext_phone, mobile=mobile)
+    # Серверная валидация (HTML5-проверку на клиенте легко обойти)
+    errors = validate_form(request.form)
+    if errors:
+        return render_template('index.html', error="; ".join(errors), **form_values), 400
     # Генерируем QR-код
     card = create_business_card(name, job_title, email, phone, ext_phone, mobile)
     # Конвертируем в base64
@@ -177,7 +180,7 @@ def generate_card():
     card.save(buffered, format="PNG")
     img_str = base64.b64encode(buffered.getvalue()).decode()
     # Возвращаем HTML с изображением
-    return render_template('index.html', card_image=img_str, name = name)
+    return render_template('index.html', card_image=img_str, **form_values)
 
 # Запуск
 # По умолчанию — локально с debug; для сервера задайте FLASK_DEBUG=false и FLASK_HOST в .env

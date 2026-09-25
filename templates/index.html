@@ -28,43 +28,43 @@
                 <!-- Блок для клиентских сообщений об ошибках (заполняется из main.js) -->
                 <div id="js-error" class="error-message" style="display: none;"></div>
                 <form id="businessCardForm" method="POST" action="{{ url_for('generate_card') }}" enctype="multipart/form-data">
-                    <p class="fill-form">Заполните форму</p>
+                    <h2 class="fill-form">Заполните форму</h2>
                     <!-- Поле ввода имени -->
                     <div class="form-group">
                         <label class="required" for="name">Ф.И.О.</label>
-                        <input type="text" placeholder="Фамилия Имя Отчество" id="name" name="name" required>
+                        <input type="text" placeholder="Фамилия Имя Отчество" id="name" name="name" value="{{ name if name is defined else '' }}" required>
                     </div>
 
                     <!-- Поле ввода должности -->
                     <div class="form-group">
                         <label class="required" for="job_title">Должность</label>
-                        <input type="text" placeholder="Ваша должность" id="job_title" name="job_title" required>
+                        <input type="text" placeholder="Ваша должность" id="job_title" name="job_title" value="{{ job_title if job_title is defined else '' }}" required>
                     </div>
 
                     <!-- Поле ввода электронной почты -->
                     <div class="form-group">
                         <label class="required" for="email">e-mail</label>
                         <!-- Укажите корректный e-mail -->
-                        <input type="email" value="{{ email_default }}" id="email" name="email" required>
+                        <input type="email" value="{{ email if email is defined else email_default }}" id="email" name="email" required>
                     </div>
 
                     <!-- Поле ввода рабочего телефона -->
                     <div class="form-group">
                         <label class="required" for="work_phone">Тел. рабочий</label>
                         <!-- Укажите корректный номер телефона -->
-                        <input type="tel" value="{{ phone_default }}" id="work_phone" name="work_phone" required>
+                        <input type="tel" value="{{ work_phone if work_phone is defined else phone_default }}" id="work_phone" name="work_phone" required>
                     </div>
 
                     <!-- Поле ввода добавочного номера рабочего телефона -->
                     <div class="form-group">
                         <label for="ext_phone">Тел. добавочный</label>
-                        <input type="tel" placeholder="хххх" id="ext_phone" name="ext_phone">
+                        <input type="tel" placeholder="хххх" id="ext_phone" name="ext_phone" value="{{ ext_phone if ext_phone is defined else '' }}">
                     </div>
 
                     <!-- Поле ввода мобильного -->
                     <div class="form-group">
                         <label for="mobile">Тел. мобильный</label>
-                        <input type="tel" placeholder="+7(ххх)ххх-хх-хх" id="mobile" name="mobile">
+                        <input type="tel" placeholder="+7(ххх)ххх-хх-хх" id="mobile" name="mobile" value="{{ mobile if mobile is defined else '' }}">
                     </div>
 
                     <div class="attention">
@@ -78,7 +78,7 @@
             <!-- Правый столбец -->
             <div class="preview-section">
                 {% if card_image %}
-                <p class="fill-form">Ваш QR-код, {{ name }}</p>
+                <h2 class="fill-form">Ваш QR-код, {{ name }}</h2>
                 <div class="result">
 
 
@@ -98,7 +98,7 @@
 
                 </div>
                 {% else %}
-                <p class="fill-form">Здесь появится ваш QR-код</p>
+                <h2 class="fill-form">Здесь появится ваш QR-код</h2>
                 {% endif %}
             </div>
         </div>
