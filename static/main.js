@@ -1,15 +1,3 @@
-// --- Копирование QR-кода в буфер обмена ---
-
-// Показывает всплывающую подсказку у кнопки копирования (~2 секунды)
-function showCopyTooltip() {
-    const tooltip = document.getElementById('copy-tooltip');
-    if (!tooltip) return;
-    tooltip.classList.add('show');
-    setTimeout(function () {
-        tooltip.classList.remove('show');
-    }, 2000);
-}
-
 // --- Клиентская валидация и маски ввода ---
 
 // Формат email как на сервере: текст@текст.текст
@@ -46,6 +34,15 @@ function formatPhone(value) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    function showCopyTooltip() {
+        const tooltip = document.getElementById('copy-tooltip');
+        if (!tooltip) return;
+        tooltip.classList.add('show');
+        setTimeout(function () {
+            tooltip.classList.remove('show');
+        }, 2000);
+    }
+
     // Маски телефонов
     ['work_phone', 'mobile'].forEach(function (id) {
         const input = document.getElementById(id);
@@ -72,11 +69,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const copyBtn = document.getElementById('copy-qr-btn');
     if (copyBtn) {
         copyBtn.addEventListener('click', async function () {
-            if (!navigator.clipboard || !window.ClipboardItem) return;
+            if (!navigator.clipboard || !window.ClipboardItem) {
+                const tooltip = document.getElementById('copy-tooltip');
+                if (tooltip) {
+                    tooltip.textContent = 'Скопируйте через правый клик по изображению';
+                    tooltip.classList.add('show');
+                    setTimeout(function () {
+                        tooltip.classList.remove('show');
+                    }, 2000);
+                }
+                return;
+            }
             const img = document.querySelector('.result img');
             if (!img) return;
             try {
-                // data URL обрабатывается локально, запроса к серверу нет
                 const response = await fetch(img.src);
                 const blob = await response.blob();
                 await navigator.clipboard.write([

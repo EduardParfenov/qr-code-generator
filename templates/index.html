@@ -12,8 +12,6 @@
     <script src="{{ url_for('static', filename='main.js') }}"></script>
 </head>
 <body>
-    <!-- <div style="display: none;">IIS_PROXY_TEST</div> -->
-
     <div class="container">
         <h1>Генератор QR-кода контакта</h1>
         <!-- Обертка с двухколоночным макетом -->
@@ -27,7 +25,7 @@
                 {% endif %}
                 <!-- Блок для клиентских сообщений об ошибках (заполняется из main.js) -->
                 <div id="js-error" class="error-message" style="display: none;"></div>
-                <form id="businessCardForm" method="POST" action="{{ url_for('generate_card') }}" enctype="multipart/form-data">
+                <form id="businessCardForm" method="POST" action="{{ url_for('generate_card') }}">
                     <h2 class="fill-form">Заполните форму</h2>
                     <!-- Поле ввода имени -->
                     <div class="form-group">

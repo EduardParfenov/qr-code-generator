@@ -54,7 +54,7 @@ def clean_company_env(monkeypatch):
 
 def test_vcard_contains_all_fields(clean_company_env):
     vcard = generate_vcard(**TEST_DATA)
-    assert f"FN:{TEST_DATA['name']}" in vcard
+    assert f"FN;CHARSET=UTF-8:{TEST_DATA['name']}" in vcard
     assert TEST_DATA["job_title"] in vcard
     assert f"EMAIL:{TEST_DATA['email']}" in vcard
     assert TEST_DATA["phone"] in vcard
@@ -63,6 +63,7 @@ def test_vcard_contains_all_fields(clean_company_env):
     assert "TYPE=CELL" in vcard
     assert "URL:" in vcard
     assert "ADR" in vcard
+    assert "CHARSET=UTF-8" in vcard
 
 
 def test_vcard_is_valid(clean_company_env):

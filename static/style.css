@@ -140,30 +140,6 @@ input[type="tel"] {
   transition: all 0.3s ease;
 }
 
-/* Стиль ввода файла */
-.file-input {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  border: 2px dashed #d2d2d7;
-  border-radius: 12px;
-  background-color: #f5f5f7;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.file-input:hover {
-  border-color: #009639;
-  background-color: #f0f0f2;
-}
-
-.help-text {
-  display: block;
-  margin-top: 8px;
-  font-size: 14px;
-  color:  #a3a3a5;
-}
-
 /* Состояние фокуса ввода с подсветкой */
 input:focus {
   outline: none;
@@ -327,15 +303,7 @@ button:hover {
   transform: translateY(-1px);
 }
 
-/* Отладка стилей флажка */
-input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  margin-right: 8px;
-  vertical-align: middle;
-}
-
-/* Выравнивание колонок и кнопок — только при двухколоночном макете */
+/* Выравнивание колонки и кнопок — только при двухколоночном макете */
 @media (min-width: 969px) {
   /* Секции — flex-колонки: нижние ряды кнопок прижимаются к низу
      и оказываются на одном уровне в левой и правой колонках */
