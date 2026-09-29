@@ -5,23 +5,22 @@ schema: spec-driven
 context: |
   Проект: qr-code-generator — веб-приложение на Flask, генерирующее QR-код
   с контактом в формате vCard. Пользователь заполняет форму, приложение
-  создаёт vCard (vobject), кодирует в QR (qrcode) и накладывает на
-  фоновое изображение (Pillow). Результат — предпросмотр на странице,
-  скачивание PNG, печать.
+  создаёт vCard (vobject), кодирует в QR (qrcode). Результат — предпросмотр
+  на странице, скачивание PNG, печать.
 
   Технологии: Python 3, Flask 3.0.2, qrcode, vobject, Pillow.
   Frontend: чистые HTML (Jinja2), CSS, JS — без фреймворков и сборки.
 
-  Структура: весь backend в app.py (один модуль: 3 функции + 2 роута),
-  templates/index.html, static/ (style.css, main.js, white_page_square.png),
-  logs/info.log — логи создаваемых vCard (в .gitignore).
+  Структура: весь backend в app.py (один модуль), templates/index.html,
+  static/ (style.css, main.js), tests/ (pytest + JS-тесты), openspec/
+  (спецификации и изменения).
 
   Конвенции:
   - Язык кода, комментариев, UI и документации — русский.
   - Коммит-сообщения на русском.
-  - Тестов нет; проверка — ручной запуск и генерация QR через форму.
-  - Настройки компании (название, сайт, адрес) осознанно захардкожены
-    в generate_vcard(); позиция QR — константы QR_X_POS / QR_Y_POS.
+  - Тесты: pytest (backend) + Node.js assert (JS-тесты для main.js).
+  - Настройки компании (название, сайт, адрес) задаются через .env.
+  - Логи пишутся только в stdout (собирает Docker).
   - Папка input/ — вспомогательные данные, не использовать и не коммитить.
   - При изменении версии обновлять VERSION и CHANGELOG.md.
 

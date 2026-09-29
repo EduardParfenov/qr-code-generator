@@ -42,10 +42,14 @@ def generate_vcard(name, job_title, email, phone, ext_phone, mobile):
     """
     vcard = vobject.vCard()
     # Ф.И.О.
-    vcard.add('fn').value = name
+    fn = vcard.add('fn')
+    fn.value = name
+    fn.charset_param = 'UTF-8'
     # должность
     company_name = os.getenv("COMPANY_NAME", 'ООО "Рога и копыта"') # Название организации (задаётся в .env)
-    vcard.add('title').value = f'{company_name}, {job_title}'
+    title = vcard.add('title')
+    title.value = f'{company_name}, {job_title}'
+    title.charset_param = 'UTF-8'
     # e-mail
     vcard.add('email').value = email
     # рабочий телефон
@@ -87,6 +91,7 @@ def generate_vcard(name, job_title, email, phone, ext_phone, mobile):
     code=os.getenv("COMPANY_ADDRESS_CODE", "4444444"),  # Почтовый индекс
     country=os.getenv("COMPANY_ADDRESS_COUNTRY", "Россия"))
     adr.type_param = 'WORK'
+    adr.charset_param = 'UTF-8'
 
     logging.info(f"Создана vCard: {vcard.serialize()}") # Запись в лог
 
@@ -159,10 +164,6 @@ def generate_card():
     Преобразует изображение в формат base64 для встраивания в HTML.
     При ошибках валидации возвращает форму с сообщением (HTTP 400).
     """
-    # Серверная валидация (HTML5-проверку на клиенте легко обойти)
-    errors = validate_form(request.form)
-    if errors:
-        return render_template('index.html', error="; ".join(errors)), 400
     # Получаем данные из формы
     name = request.form.get('name', '').strip()
     job_title = request.form.get('job_title', '').strip()
@@ -170,14 +171,25 @@ def generate_card():
     phone = request.form.get('work_phone', '').strip()
     ext_phone = request.form.get('ext_phone', '').strip()
     mobile = request.form.get('mobile', '').strip()
+    # «Липкая форма»: введённые значения возвращаем в шаблон и при успехе, и при ошибке
+    form_values = dict(name=name, job_title=job_title, email=email,
+                       work_phone=phone, ext_phone=ext_phone, mobile=mobile)
+    # Серверная валидация (HTML5-проверку на клиенте легко обойти)
+    errors = validate_form(request.form)
+    if errors:
+        return render_template('index.html', error="; ".join(errors), **form_values), 400
     # Генерируем QR-код
-    card = create_business_card(name, job_title, email, phone, ext_phone, mobile)
+    try:
+        card = create_business_card(name, job_title, email, phone, ext_phone, mobile)
+    except Exception as e:
+        logging.error(f"Ошибка генерации QR-кода: {e}")
+        return render_template('index.html', error="Не удалось сгенерировать QR-код. Попробуйте ещё раз.", **form_values), 500
     # Конвертируем в base64
     buffered = io.BytesIO()
     card.save(buffered, format="PNG")
     img_str = base64.b64encode(buffered.getvalue()).decode()
     # Возвращаем HTML с изображением
-    return render_template('index.html', card_image=img_str, name = name)
+    return render_template('index.html', card_image=img_str, **form_values)
 
 # Запуск
 # По умолчанию — локально с debug; для сервера задайте FLASK_DEBUG=false и FLASK_HOST в .env

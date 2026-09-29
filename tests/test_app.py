@@ -54,7 +54,7 @@ def clean_company_env(monkeypatch):
 
 def test_vcard_contains_all_fields(clean_company_env):
     vcard = generate_vcard(**TEST_DATA)
-    assert f"FN:{TEST_DATA['name']}" in vcard
+    assert f"FN;CHARSET=UTF-8:{TEST_DATA['name']}" in vcard
     assert TEST_DATA["job_title"] in vcard
     assert f"EMAIL:{TEST_DATA['email']}" in vcard
     assert TEST_DATA["phone"] in vcard
@@ -63,6 +63,7 @@ def test_vcard_contains_all_fields(clean_company_env):
     assert "TYPE=CELL" in vcard
     assert "URL:" in vcard
     assert "ADR" in vcard
+    assert "CHARSET=UTF-8" in vcard
 
 
 def test_vcard_is_valid(clean_company_env):
@@ -216,6 +217,50 @@ def test_generate_lists_all_errors(client):
 def test_generate_valid_with_empty_optional_fields(client):
     response = client.post("/generate", data={**FORM_DATA, "ext_phone": "", "mobile": ""})
     assert response.status_code == 200
+
+
+# --- Липкая форма (введённые значения остаются в полях после отправки) ---
+
+def test_generate_preserves_form_values(client):
+    """Успешный POST: все шесть полей возвращаются в HTML с введёнными значениями"""
+    response = client.post("/generate", data=FORM_DATA)
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    for value in FORM_DATA.values():
+        assert f'value="{value}"' in html
+
+
+def test_generate_user_values_override_defaults(client):
+    """Введённые email и рабочий телефон приоритетнее значений по умолчанию"""
+    data = {**FORM_DATA, "email": "user@example.org", "work_phone": "+7(999)123-45-67"}
+    response = client.post("/generate", data=data)
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert 'value="user@example.org"' in html
+    assert 'value="+7(999)123-45-67"' in html
+
+
+def test_generate_error_preserves_form_values(client):
+    """Ошибка валидации: поля показывают введённые значения, включая невалидный email"""
+    data = {**FORM_DATA, "email": "не-почта"}
+    response = client.post("/generate", data=data)
+    assert response.status_code == 400
+    html = response.get_data(as_text=True)
+    for value in data.values():
+        assert f'value="{value}"' in html
+
+
+def test_index_shows_defaults_and_empty_fields(monkeypatch, client):
+    """GET /: email и рабочий телефон — дефолты, остальные поля пусты"""
+    monkeypatch.delenv("FORM_EMAIL_DEFAULT", raising=False)
+    monkeypatch.delenv("FORM_WORK_PHONE_DEFAULT", raising=False)
+    response = client.get("/")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert 'value="@roga-i-kopyta.com"' in html
+    assert 'value="+7(800)000-00-00"' in html
+    for field in ["name", "job_title", "ext_phone", "mobile"]:
+        assert f'name="{field}" value=""' in html
 
 
 # --- Кнопка «Шаблоны визиток» ---
