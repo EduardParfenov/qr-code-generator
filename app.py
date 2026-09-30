@@ -51,37 +51,40 @@ def generate_vcard(name, job_title, email, phone, ext_phone, mobile):
     title.value = f'{company_name}, {job_title}'
     title.charset_param = 'UTF-8'
     # e-mail
-    vcard.add('email').value = email
-    # рабочий телефон
-    work_tel = vcard.add('tel')
-    work_tel.value = f"{phone}"
-    work_tel.type_param = 'WORK'
+    email_field = vcard.add('email')
+    email_field.value = email
+    email_field.charset_param = 'UTF-8'
+
+    # телефоны: рабочий и добавочный — WORK, мобильный — CELL.
+    # CHARSET проставляется в единственном месте для всех трёх полей
+    def add_tel(value, tel_type):
+        if not value:
+            return
+        tel = vcard.add('tel')
+        tel.value = value
+        tel.type_param = tel_type
+        tel.charset_param = 'UTF-8'
+
+    add_tel(phone, 'WORK')
 
     '''
     Если вам необходимо добавить рабочий телефон с добавлением добавочного в заметки контакта
     раскоментируйте код ниже.
     '''
-    # work_tel = vcard.add('tel')
-    # work_tel.value = phone
-    # work_tel.type_param = 'WORK,VOICE'
+    # add_tel(phone, 'WORK')
     # vcard.add('note').value = f"Доб. номер {ext_phone}"
 
     '''
     Если добавочный телефон нужно отображать после рабочего номера, использейте код ниже
     '''
     # добавочный телефон (необязательный — добавляем только если заполнен)
-    if ext_phone:
-        ext_tel = vcard.add('tel')
-        ext_tel.value = f"{ext_phone}"
-        ext_tel.type_param = 'WORK'
-
+    add_tel(ext_phone, 'WORK')
     # мобильный телефон (необязательный — добавляем только если заполнен)
-    if mobile:
-        mobile_tel = vcard.add('tel')
-        mobile_tel.value = mobile
-        mobile_tel.type_param = 'CELL'
+    add_tel(mobile, 'CELL')
     # url
-    vcard.add('url').value = os.getenv("COMPANY_SITE", 'roga-i-kopyta.com')  # Адрес сайта (задаётся в .env)
+    url_field = vcard.add('url')
+    url_field.value = os.getenv("COMPANY_SITE", 'roga-i-kopyta.com')  # Адрес сайта (задаётся в .env)
+    url_field.charset_param = 'UTF-8'
     # адрес
     adr = vcard.add('adr')
     adr.value = vobject.vcard.Address(

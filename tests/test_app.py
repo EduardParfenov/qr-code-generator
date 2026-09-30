@@ -8,6 +8,8 @@
 import logging
 
 import pytest
+import qrcode
+import qrcode.util
 import vobject
 
 from app import (
@@ -56,12 +58,12 @@ def test_vcard_contains_all_fields(clean_company_env):
     vcard = generate_vcard(**TEST_DATA)
     assert f"FN;CHARSET=UTF-8:{TEST_DATA['name']}" in vcard
     assert TEST_DATA["job_title"] in vcard
-    assert f"EMAIL:{TEST_DATA['email']}" in vcard
+    assert f"EMAIL;CHARSET=UTF-8:{TEST_DATA['email']}" in vcard
     assert TEST_DATA["phone"] in vcard
     assert TEST_DATA["mobile"] in vcard
     assert "TYPE=WORK" in vcard
     assert "TYPE=CELL" in vcard
-    assert "URL:" in vcard
+    assert "URL;CHARSET=UTF-8:" in vcard
     assert "ADR" in vcard
     assert "CHARSET=UTF-8" in vcard
 
@@ -106,6 +108,129 @@ def test_vcard_with_filled_mobile_only(clean_company_env):
     tel_lines = [l for l in vcard.splitlines() if l.startswith("TEL")]
     assert len(tel_lines) == 2  # рабочий + мобильный
     assert "TYPE=CELL" in vcard
+
+
+# --- Кодировка кириллицы: CHARSET на всех полях и цепочка vCard -> QR ---
+
+# Поля vCard, которые несут текст: каждая такая строка обязана объявлять CHARSET
+TEXT_FIELDS = ("FN", "TITLE", "ADR", "EMAIL", "URL", "TEL")
+
+
+def content_lines(vcard):
+    """
+    Строки содержимого vCard без продолжений переноса.
+
+    Перенос длинной строки в vCard 3.0 — это CRLF и один пробел в начале
+    следующей строки, поэтому продолжение начинается с пробела и не является
+    новым полем: его собственный CHARSET не нужен и не проверяется.
+    """
+    return [
+        line for line in vcard.splitlines()
+        if not line.startswith((" ", "\t")) and ":" in line
+        and not line.startswith(("BEGIN", "END", "VERSION"))
+    ]
+
+
+def test_charset_on_every_text_field_without_cyrillic(clean_company_env):
+    """
+    CHARSET=UTF-8 объявлен на каждом текстовом поле даже когда значение
+    состоит только из латиницы и цифр: набор параметров не должен зависеть
+    от того, вписал ли пользователь кириллицу.
+    """
+    data = dict(TEST_DATA, name="Ivanov Ivan", job_title="Engineer", mobile="+79001112233")
+    vcard = generate_vcard(**data)
+    checked = set()
+    for line in content_lines(vcard):
+        field = line.split(":", 1)[0].split(";", 1)[0]
+        if field in TEXT_FIELDS:
+            assert "CHARSET=UTF-8" in line.split(":", 1)[0], f"нет CHARSET в строке: {line}"
+            checked.add(field)
+    assert checked == set(TEXT_FIELDS), f"не проверены поля: {set(TEXT_FIELDS) - checked}"
+
+
+def test_charset_on_optional_phones_with_cyrillic(clean_company_env):
+    """Добавочный и мобильный с кириллицей тоже объявляют CHARSET"""
+    data = {**TEST_DATA, "ext_phone": "доб. 12-34", "mobile": "+7(900)111-22-33 доб"}
+    vcard = generate_vcard(**data)
+    tel_lines = [line for line in content_lines(vcard) if line.startswith("TEL")]
+    assert len(tel_lines) == 3  # рабочий + добавочный + мобильный
+    for line in tel_lines:
+        assert "CHARSET=UTF-8" in line.split(":", 1)[0], f"нет CHARSET в строке: {line}"
+
+
+CYRILLIC_DATA = dict(
+    name="Иванов Иван Иванович",
+    job_title="Ведущий инженер",
+    email="ivanov@рога.рф",
+    phone="+7(800)000-00-00",
+    ext_phone="доб. 12",
+    mobile="+7(900)111-22-33",
+)
+
+
+def test_cyrillic_survives_round_trip(monkeypatch):
+    """Кириллица в каждом поле читается обратно парсером в исходном виде"""
+    monkeypatch.setenv("COMPANY_SITE", "рога-и-копыта.рф")
+    monkeypatch.setenv("COMPANY_ADDRESS_STREET", "ул. Рогов и Копыт")
+    parsed = vobject.readOne(generate_vcard(**CYRILLIC_DATA))
+    assert parsed.fn.value == CYRILLIC_DATA["name"]
+    assert parsed.email.value == CYRILLIC_DATA["email"]
+    assert parsed.url.value == "рога-и-копыта.рф"
+    tels = [t.value for t in parsed.contents["tel"]]
+    assert CYRILLIC_DATA["phone"] in tels
+    assert CYRILLIC_DATA["ext_phone"] in tels
+    assert CYRILLIC_DATA["mobile"] in tels
+    assert CYRILLIC_DATA["job_title"] in parsed.title.value
+    assert "Рогов и Копыт" in parsed.adr.value.street
+
+
+def test_qr_encodes_exact_utf8_bytes_of_vcard(clean_company_env):
+    """
+    В QR-код уходят те же UTF-8-байты, что и в сериализованной vCard:
+    кириллица не переводится в другой алфавит и не теряется.
+
+    Здесь намеренно обращаемся к внутреннему состоянию qrcode — иначе
+    убедиться в побайтовом совпадении нечем.
+    """
+    vcard = generate_vcard(**CYRILLIC_DATA)
+    expected = vcard.encode("utf-8")
+    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+    qr.add_data(expected)
+    qr.make(fit=True)
+    assert qr.data_list[0].mode == qrcode.util.MODE_8BIT_BYTE
+    assert bytes(qr.data_list[0].data) == expected
+
+
+def unfold(vcard):
+    """Склеивает переносы строк vCard 3.0 обратно в исходные строки"""
+    lines = []
+    for line in vcard.splitlines():
+        if line.startswith((" ", "\t")) and lines:
+            lines[-1] += line[1:]
+        else:
+            lines.append(line)
+    return lines
+
+
+def test_long_cyrillic_value_folds_without_splitting_characters(monkeypatch):
+    """
+    Длинное кириллическое значение переносится по границам многобайтовых
+    символов и обратно собирается без потерь.
+
+    Предел формата задан в октетах, а не в символах: кириллица занимает два
+    байта, поэтому длина считается в len(line.encode("utf-8")).
+    """
+    long_name = "АО " + "Гипростроительный трест " * 4 + " имени академика Сеченова"
+    monkeypatch.setenv("COMPANY_NAME", long_name)
+    vcard = generate_vcard(**CYRILLIC_DATA)
+    assert max(len(l.encode("utf-8")) for l in vcard.splitlines()) <= 75
+    unfolded = unfold(vcard)
+    title_lines = [l for l in unfolded if l.startswith("TITLE")]
+    assert len(title_lines) == 1
+    assert long_name in title_lines[0]
+    assert "CHARSET=UTF-8" in title_lines[0].split(":", 1)[0]
+    # перенос не разорвал ни одного многобайтового символа
+    assert long_name in vobject.readOne(vcard).title.value
 
 
 # --- generate_qr_code ---
