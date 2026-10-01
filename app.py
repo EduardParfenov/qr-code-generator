@@ -36,6 +36,30 @@ def inject_form_defaults():
     )
 
 
+# Демо-значение сайта компании (задаётся в .env через COMPANY_SITE).
+# Со схемой: поле URL в vCard должно содержать полный URI (RFC 2426)
+DEFAULT_COMPANY_SITE = "https://roga-i-kopyta.com"
+
+# Признак уже заданной схемы по RFC 3986: «схема://». Проверяется именно эта
+# форма, а не наличие двоеточия: в «a.ru:8080» двоеточие отделяет порт, а не схему
+URL_SCHEME_PATTERN = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.\-]*://")
+
+
+def normalize_site_url(value):
+    """
+    Приводит адрес сайта к полному URI для поля URL в vCard.
+    Схема, если она уже задана, сохраняется как есть (решение — за владельцем
+    конфигурации); если схемы нет, добавляется https://.
+    Пустое значение возвращается как есть: дописывать схему к пустой строке
+    нельзя, поле URL должно остаться пустым.
+    Ведущие «//» (протокол-относительная запись, сама по себе не URI) перед
+    добавлением схемы убираются, иначе получилось бы «https:////».
+    """
+    if not value or URL_SCHEME_PATTERN.match(value):
+        return value
+    return "https://" + value.lstrip("/")
+
+
 def generate_vcard(name, job_title, email, phone, ext_phone, mobile):
     """
     Генерирует vCard на основе информации пользователя
@@ -83,7 +107,8 @@ def generate_vcard(name, job_title, email, phone, ext_phone, mobile):
     add_tel(mobile, 'CELL')
     # url
     url_field = vcard.add('url')
-    url_field.value = os.getenv("COMPANY_SITE", 'roga-i-kopyta.com')  # Адрес сайта (задаётся в .env)
+    # Адрес приводится к полному URI: без схемы в .env добавляется https://
+    url_field.value = normalize_site_url(os.getenv("COMPANY_SITE", DEFAULT_COMPANY_SITE))
     url_field.charset_param = 'UTF-8'
     # адрес
     adr = vcard.add('adr')

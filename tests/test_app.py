@@ -17,6 +17,7 @@ from app import (
     generate_vcard,
     generate_qr_code,
     create_business_card,
+    normalize_site_url,
     validate_form,
 )
 
@@ -31,9 +32,10 @@ COMPANY_ENV_VARS = [
     "COMPANY_ADDRESS_COUNTRY",
 ]
 
-# Демо-значения по умолчанию (как в app.py)
+# Демо-значения по умолчанию (как в app.py).
+# COMPANY_SITE указывается со схемой — поле URL в vCard должно содержать полный URI
 DEFAULT_COMPANY_NAME = 'ООО "Рога и копыта"'
-DEFAULT_COMPANY_SITE = "roga-i-kopyta.com"
+DEFAULT_COMPANY_SITE = "https://roga-i-kopyta.com"
 
 TEST_DATA = dict(
     name="Иванов Иван Иванович",
@@ -87,7 +89,9 @@ def test_vcard_reads_company_from_env(monkeypatch):
     monkeypatch.setenv("COMPANY_SITE", "test-company.ru")
     vcard = generate_vcard(**TEST_DATA)
     assert "ООО «Тестовая компания»" in vcard
-    assert "test-company.ru" in vcard
+    # Точное значение, а не подстрока: «test-company.ru» входит и в
+    # «https://test-company.ru», и проверка по подстроке скрыла бы ошибку
+    assert vobject.readOne(vcard).url.value == "https://test-company.ru"
 
 
 def test_vcard_with_empty_optional_phones(clean_company_env):
@@ -108,6 +112,67 @@ def test_vcard_with_filled_mobile_only(clean_company_env):
     tel_lines = [l for l in vcard.splitlines() if l.startswith("TEL")]
     assert len(tel_lines) == 2  # рабочий + мобильный
     assert "TYPE=CELL" in vcard
+
+
+# --- Поле URL: полный URI по RFC 2426 ---
+
+def test_site_url_gets_https_when_scheme_missing(monkeypatch):
+    """Адрес без схемы получает https:// — в vCard попадает полный URI"""
+    monkeypatch.setenv("COMPANY_SITE", "www.gipvn.ru")
+    parsed = vobject.readOne(generate_vcard(**TEST_DATA))
+    assert parsed.url.value == "https://www.gipvn.ru"
+
+
+@pytest.mark.parametrize("scheme", ["https://", "http://"])
+def test_site_url_keeps_existing_scheme(monkeypatch, scheme):
+    """Уже указанная схема сохраняется — приложение её не переписывает"""
+    monkeypatch.setenv("COMPANY_SITE", f"{scheme}www.gipvn.ru")
+    parsed = vobject.readOne(generate_vcard(**TEST_DATA))
+    assert parsed.url.value == f"{scheme}www.gipvn.ru"
+
+
+def test_site_url_keeps_non_http_scheme(monkeypatch):
+    """Схема, отличная от HTTP, не подменяется на https://"""
+    monkeypatch.setenv("COMPANY_SITE", "ftp://files.example.ru")
+    parsed = vobject.readOne(generate_vcard(**TEST_DATA))
+    assert parsed.url.value == "ftp://files.example.ru"
+
+
+def test_site_url_empty_stays_empty(monkeypatch):
+    """Пустая настройка оставляет поле URL пустым, а не превращается в https://"""
+    monkeypatch.setenv("COMPANY_SITE", "")
+    vcard = generate_vcard(**TEST_DATA)
+    url_lines = [l for l in vcard.splitlines() if l.startswith("URL")]
+    assert len(url_lines) == 1
+    assert url_lines[0].split(":", 1)[1] == ""
+
+
+def test_site_url_default_has_scheme(clean_company_env):
+    """Демо-значение по умолчанию само содержит схему"""
+    assert vobject.readOne(generate_vcard(**TEST_DATA)).url.value == DEFAULT_COMPANY_SITE
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        # без схемы — добавляется https://
+        ("www.gipvn.ru", "https://www.gipvn.ru"),
+        ("рога-и-копыта.рф", "https://рога-и-копыта.рф"),
+        # двоеточие отделяет порт, а не схему, — значение всё ещё без схемы
+        ("a.ru:8080", "https://a.ru:8080"),
+        # протокол-относительная запись сама по себе не URI
+        ("//a.ru", "https://a.ru"),
+        # схема уже есть — значение не меняется
+        ("https://a.ru", "https://a.ru"),
+        ("http://a.ru", "http://a.ru"),
+        ("ftp://a.ru", "ftp://a.ru"),
+        # пустое значение возвращается как есть, а не превращается в https://
+        ("", ""),
+    ],
+)
+def test_normalize_site_url(value, expected):
+    """Правило нормализации: полный URI либо исходное значение"""
+    assert normalize_site_url(value) == expected
 
 
 # --- Кодировка кириллицы: CHARSET на всех полях и цепочка vCard -> QR ---
@@ -175,7 +240,7 @@ def test_cyrillic_survives_round_trip(monkeypatch):
     parsed = vobject.readOne(generate_vcard(**CYRILLIC_DATA))
     assert parsed.fn.value == CYRILLIC_DATA["name"]
     assert parsed.email.value == CYRILLIC_DATA["email"]
-    assert parsed.url.value == "рога-и-копыта.рф"
+    assert parsed.url.value == "https://рога-и-копыта.рф"
     tels = [t.value for t in parsed.contents["tel"]]
     assert CYRILLIC_DATA["phone"] in tels
     assert CYRILLIC_DATA["ext_phone"] in tels
