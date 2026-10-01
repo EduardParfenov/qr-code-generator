@@ -15,6 +15,21 @@ services:
     env_file: .env
     # Поднимать контейнер после перезагрузки сервера и после падения
     restart: unless-stopped
+    # Проверка работоспособности изнутри контейнера: docker ps показывает
+    # (healthy) / (unhealthy), что отличает живой процесс от зависшего
+    # (контейнер-то не завершился, поэтому restart не срабатывает).
+    # curl в образе отсутствует — проверяем штатным модулем urllib.
+    # Адрес 127.0.0.1, а не localhost: gunicorn слушает только IPv4.
+    # Таймаут 3 с внутри urlopen меньше timeout пробы (5 с), чтобы проверка
+    # завершалась кодом возврата, а не убивалась демоном.
+    # Проверяется существующий GET /: рендер занимает единицы миллисекунд,
+    # новый маршрут для этой цели не заводим.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/', timeout=3).status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     # Общая сеть с nginx; порт на хост не публикуется (наружу смотрит только nginx)
     networks:
       - nginx-net
