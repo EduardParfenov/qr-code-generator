@@ -479,9 +479,47 @@ def test_log_handler_writes_to_stdout():
     assert any(type(h) is logging.StreamHandler for h in logging.getLogger().handlers)
 
 
+LOG_PREFIX = "v-card создана для контакта:"
+
+
 def test_vcard_logged_to_stdout(client, caplog):
-    """Созданная vCard записывается в лог уровня INFO (виден через docker logs)"""
+    """В лог уровня INFO пишется имя контакта (виден через docker logs)"""
     with caplog.at_level(logging.INFO):
         response = client.post("/generate", data=FORM_DATA)
     assert response.status_code == 200
-    assert any("Создана vCard" in record.message for record in caplog.records)
+    assert any(LOG_PREFIX in record.message for record in caplog.records)
+    assert any(TEST_DATA["name"] in record.message for record in caplog.records)
+
+
+def test_log_contains_no_serialized_vcard(client, caplog):
+    """Сериализованный текст vCard в лог не попадает — только имя контакта"""
+    with caplog.at_level(logging.INFO):
+        client.post("/generate", data=FORM_DATA)
+    log_text = "\n".join(r.message for r in caplog.records)
+    for marker in ("BEGIN:VCARD", "VERSION:", "END:VCARD",
+                   "FN:", "EMAIL:", "TEL:", "TITLE:", "ADR:", "URL:"):
+        assert marker not in log_text, f"маркер {marker!r} попал в лог"
+
+
+def test_log_contains_no_other_vcard_fields(client, caplog, clean_company_env):
+    """E-mail, телефоны, должность и адрес компании в лог не попадают"""
+    with caplog.at_level(logging.INFO):
+        client.post("/generate", data=FORM_DATA)
+    log_text = "\n".join(r.message for r in caplog.records)
+    for secret in (TEST_DATA["email"], TEST_DATA["phone"],
+                   TEST_DATA["ext_phone"], TEST_DATA["mobile"],
+                   TEST_DATA["job_title"],
+                   'ООО "Рога и копыта"', "Нью-Йорк", "roga-i-kopyta.com"):
+        assert secret not in log_text, f"значение {secret!r} попало в лог"
+
+
+def test_newline_in_name_does_not_split_log_record(client, caplog):
+    """Перевод строки в ФИО не создаёт в логе отдельной записи"""
+    forged = "Иванов\n2026-01-01 - INFO - v-card создана для контакта: ПОДДЕЛКА"
+    with caplog.at_level(logging.INFO):
+        response = client.post("/generate", data={**FORM_DATA, "name": forged})
+    assert response.status_code == 200
+    records = [r.message for r in caplog.records if LOG_PREFIX in r.message]
+    assert len(records) == 1, f"ожидалась одна запись, получено {len(records)}"
+    assert "\n" not in records[0]
+    assert records[0] == f"{LOG_PREFIX} Иванов 2026-01-01 - INFO - v-card создана для контакта: ПОДДЕЛКА"

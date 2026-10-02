@@ -121,7 +121,11 @@ def generate_vcard(name, job_title, email, phone, ext_phone, mobile):
     adr.type_param = 'WORK'
     adr.charset_param = 'UTF-8'
 
-    logging.info(f"Создана vCard: {vcard.serialize()}") # Запись в лог
+    # В лог пишется только имя контакта: e-mail, телефоны, должность и адрес
+    # остаются в QR-коде, но в лог не попадают. Переводы строк заменяются
+    # пробелом, иначе значение поля создало бы в логе отдельную запись
+    contact_name = name.replace("\n", " ").replace("\r", " ")
+    logging.info(f"v-card создана для контакта: {contact_name}")
 
     return vcard.serialize()
 
